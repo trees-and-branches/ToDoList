@@ -7,9 +7,9 @@
 
 import UIKit
 
-struct ToDo: Equatable {
+struct ToDo: Equatable, Codable {
     
-    let id = UUID()
+    let id: UUID
     
     var title: String
     
@@ -18,14 +18,35 @@ struct ToDo: Equatable {
     var dueDate: Date
     
     var notes: String?
-    static func ==(lhs: ToDo, rhs: ToDo) -> Bool {
+    
+    static let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    
+    static let archiveURL = documentsDirectory.appendingPathComponent("toDos").appendingPathExtension("plist")
+    
+    init(title: String, isComplete: Bool, dueDate: Date, notes: String? = nil) {
+        self.id = UUID()
+        self.title = title
+        self.isComplete = isComplete
+        self.dueDate = dueDate
+        self.notes = notes
+    }
+    
+    static func loadToDos() -> [ToDo]? {
+        guard let codedToDos = try? Data(contentsOf: archiveURL) else { return nil }
+        let propertyListDecoder = PropertyListDecoder()
+        return try? propertyListDecoder.decode(Array<ToDo>.self, from: codedToDos)
+    }
+    
+    static func saveToDos(_ toDos: [ToDo]) {
+        let propertyListEncoder = PropertyListEncoder()
+        let codedToDos = try? propertyListEncoder.encode(toDos)
+        try? codedToDos?.write(to: archiveURL, options: .noFileProtection)
+    }
+    
+    static func == (lhs: ToDo, rhs: ToDo) -> Bool {
         return lhs.id == rhs.id
     }
     
-    
-    static func loadToDos() -> [ToDo]?  {
-        return nil
-    }
     
     static func loadSampleToDos() -> [ToDo] {
         let toDo1 = ToDo(title: "ToDo1", isComplete: false, dueDate: Date(), notes: "note 1")

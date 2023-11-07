@@ -17,7 +17,9 @@ class ToDoDetailTableViewController: UITableViewController {
     
     @IBOutlet weak var saveButton: UIBarButtonItem!
     
-    var isDatePickerHidden = true    
+    var toDo: ToDo?
+    
+    var isDatePickerHidden = true
     let dateLabelIndexPath = IndexPath(row: 0, section: 1)
     
     let datePickerIndexPath = IndexPath(row: 1, section: 1)
@@ -26,6 +28,15 @@ class ToDoDetailTableViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let toDo = toDo {
+            navigationItem.title = "To-Do"
+            titleTextField.text = toDo.title
+            isCompleteButton.isSelected = toDo.isComplete
+            dueDateLabel.text = "\(toDo.dueDate)"
+            notesTextView.text = toDo.notes
+            
+        }
         updateSaveButtonStateTxtLbl()
         
         
@@ -60,23 +71,43 @@ class ToDoDetailTableViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
         if indexPath == dateLabelIndexPath {
             isDatePickerHidden.toggle()
-                updateDateLabel(date: dueDatePicker.date)
+            updateDateLabel(date: dueDatePicker.date)
             tableView.beginUpdates()
             tableView.endUpdates()
         }
     }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        super.prepare(for: segue, sender: sender)
+        guard segue.identifier == "saveUnwind" else { return }
+        let title = titleTextField.text!
+        let isComplete = isCompleteButton.isSelected
+        let dueDate = dueDatePicker.date
+        let notes = notesTextView.text
+        if toDo != nil {
+            toDo?.title = title
+            toDo?.isComplete = isComplete
+            toDo?.dueDate = dueDate
+            toDo?.notes = notes
+        } else {
+            toDo = ToDo(title: title, isComplete: isComplete,
+                        dueDate: dueDate, notes: notes)
+        }
+    }
+    
+    
+    
     @IBAction func textEditingChanged(_ sender: UITextField) {
         
         updateDateLabel(date: dueDatePicker.date)
         updateSaveButtonStateTxtLbl()
-        saveButton.isEnabled = false
+        //        saveButton.isEnabled = false
         
     }
     
     @IBAction func returnPressed(_ sender: Any) { //read from the book lol
         
-        isCompleteButton.isSelected.toggle()
+        isCompleteButton.isSelected = true
         
     }
     
